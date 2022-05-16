@@ -133,12 +133,23 @@ class ServiceLifecycleHook:
         pass
 
 
-class StateLifecycle:
-    def retrieve_state(self):
-        pass
+class BackendStateLifecycleBase(abc.ABC):
+    """
+    Services that want to support Cloud Pods and in-memory retrieval, inject and restore of their backends
+    needs to implement this interface in their provider.
+    """
 
-    def inject_state(self, state):
-        pass
+    @abc.abstractmethod
+    def retrieve_state(self, *args):
+        """Retrieves a backend for an account, region and service from memory"""
+
+    @abc.abstractmethod
+    def inject_state(self, *args):
+        """Injects a backend for an account, region and service from memory"""
+
+    @abc.abstractmethod
+    def reset_state(self):
+        """Resets a backend for an account, region and service"""
 
 
 class Service:
@@ -151,7 +162,7 @@ class Service:
         active=False,
         stop=None,
         lifecycle_hook: ServiceLifecycleHook = None,
-        state_lifecycle: StateLifecycle = None,
+        backend_state_lifecycle: BackendStateLifecycleBase = None,
     ):
         self.plugin_name = name
         self.start_function = start
@@ -160,7 +171,7 @@ class Service:
         self.default_active = active
         self.stop_function = stop
         self.lifecycle_hook = lifecycle_hook or ServiceLifecycleHook()
-        self.state_lifecycle = state_lifecycle
+        self.backend_state_lifecycle = backend_state_lifecycle
         call_safe(self.lifecycle_hook.on_after_init)
 
     def start(self, asynchronous):
