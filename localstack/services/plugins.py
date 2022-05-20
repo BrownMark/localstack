@@ -151,6 +151,11 @@ class BackendStateLifecycleBase(abc.ABC):
     def reset_state(self):
         """Resets a backend for an account, region and service"""
 
+    @abc.abstractmethod
+    def on_after_reset(self):
+        """Defines eventual operations to do after a reset of a service"""
+        pass
+
 
 class Service:
     def __init__(
